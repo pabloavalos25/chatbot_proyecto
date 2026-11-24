@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chatbot | Pruebas locales</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; color: #332b16; background: #faf7ed; }
+    * { box-sizing: border-box; }
+    [hidden] { display:none !important; }
+    body { margin: 0; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 3px solid #e3a844; outline-offset: 3px; }
+    .topbar { padding: 20px clamp(20px, 5vw, 72px); border-bottom: 1px solid #eadfbf; background: #fff; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand { display:flex; align-items:center; gap:12px; font-weight:750; letter-spacing:-.03em; }
+    .brand-icon { width:36px; height:36px; display:grid; place-items:center; background:#e8b527; color:#302400; border-radius:12px; font-size:20px; }
+    .topbar a { color:#665019; font-size:.85rem; }
+    main { max-width:1200px; margin:auto; padding:42px 28px 64px; }
+    .intro { display:flex; justify-content:space-between; gap:20px; align-items:end; margin-bottom:32px; }
+    .eyebrow { margin:0 0 9px; font-size:.7rem; letter-spacing:.15em; text-transform:uppercase; color:#79601c; font-weight:800; }
+    h1 { margin:0; font-size:clamp(1.7rem, 3vw, 2.5rem); letter-spacing:-.045em; line-height:1.12; }
+    .intro p:last-child { color:#6c624c; margin:10px 0 0; font-size:.95rem; }
+    .local-tag { white-space:nowrap; color:#695310; background:#fff1c1; padding:8px 12px; border-radius:999px; font-size:.77rem; font-weight:700; }
+    .workspace { display:grid; grid-template-columns:minmax(340px, 1fr) minmax(340px, 1fr); gap:24px; align-items:start; }
+    .preview, .operator { border:1px solid #eadfbf; background:#fff; border-radius:20px; min-width:0; }
+    .preview { background:#f9edc8; padding:26px; }
+    .section-heading { display:flex; align-items:start; justify-content:space-between; gap:12px; margin-bottom:20px; }
+    .section-heading h2 { margin:0 0 5px; font-size:1rem; letter-spacing:-.02em; }
+    .section-heading p, .hint { margin:0; color:#6e6554; font-size:.84rem; line-height:1.5; }
+    .step { color:#80691e; font-size:.7rem; font-weight:800; letter-spacing:.1em; }
+    .phone { width:min(100%, 350px); margin:0 auto; background:#26231c; border:7px solid #373329; border-radius:38px; padding:5px; box-shadow:0 22px 40px #65521d2b, 0 3px 8px #65521d24; }
+    .phone-screen { overflow:hidden; height:600px; max-height:calc(100vh - 150px); min-height:470px; background:#fffcf3; border-radius:28px; display:flex; flex-direction:column; }
+    .phone-status { height:30px; background:#fff; display:flex; align-items:center; justify-content:center; flex:none; }
+    .phone-notch { width:76px; height:16px; border-radius:12px; background:#373329; }
+    .chat-header { padding:12px 16px 15px; display:flex; align-items:center; gap:11px; background:#fff; border-bottom:1px solid #f0eadc; }
+    .avatar { flex:none; width:40px; height:40px; background:#fff0b8; color:#715300; border-radius:14px; display:grid; place-items:center; font-size:1.1rem; font-weight:800; }
+    .chat-header strong { display:block; font-size:.9rem; } .chat-header small { display:block; margin-top:3px; color:#716850; font-size:.72rem; }
+    .customer-control { padding:10px 15px; background:#fff; border-bottom:1px solid #edf1ed; display:flex; gap:8px; align-items:center; }
+    .customer-control label { margin:0; white-space:nowrap; font-size:.72rem; color:#73877b; }
+    input, select { width:100%; border:1px solid #e5daba; background:#fff; color:#332b16; padding:10px 12px; border-radius:10px; min-width:0; }
+    .customer-control input { padding:6px 8px; font-size:.75rem; }
+    .history { overflow-y:auto; min-height:0; background:#fffcf3; padding:15px; }
+    #client-history { flex:1; }
+    .empty { color:#82785f; text-align:center; font-size:.8rem; line-height:1.5; margin:35px 10px; }
+    .bubble { width:fit-content; max-width:88%; margin:0 0 10px; padding:10px 12px; border-radius:14px 14px 14px 4px; background:#fff; border:1px solid #eee6d4; overflow-wrap:anywhere; white-space:pre-wrap; font-size:.84rem; line-height:1.45; }
+    .bubble.customer { margin-left:auto; border-radius:14px 14px 4px 14px; background:#ffedaa; border-color:#ffedaa; }
+    .bubble.operator { background:#edf3fd; }
+    .who { font-size:.65rem; font-weight:750; color:#766b51; margin-bottom:4px; }
+    .composer { display:flex; gap:8px; background:#fff; padding:11px; border-top:1px solid #f0eadc; }
+    .composer input { border:0; background:#faf5e9; font-size:.85rem; }
+    .primary { border:0; border-radius:10px; background:#e8b527; color:#302400; padding:10px 15px; font-weight:700; }
+    .primary:hover { background:#d5a11b; } .primary:disabled, .secondary:disabled { opacity:.45; cursor:not-allowed; }
+    .status { color:#6a5e3d; font-size:.76rem; line-height:1.4; min-height:1.1em; margin:0; }
+    #client-status { background:#fff; padding:0 15px 9px; }
+    .error { color:#a42d38; }
+    .operator { padding:26px; }
+    .operator .section-heading { border-bottom:1px solid #f0eadc; padding-bottom:20px; }
+    label { display:block; margin:18px 0 7px; font-size:.8rem; font-weight:700; color:#665325; }
+    #operator-history { height:270px; margin:14px 0; border:1px solid #eee6d4; border-radius:12px; }
+    .operator .composer { padding:0; border:0; background:none; }
+    .operator .composer input { border:1px solid #e5daba; background:#fff; }
+    .actions { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0; }
+    .secondary { border:1px solid #e7d8ab; color:#614b10; background:#fff8de; padding:9px 12px; border-radius:9px; font-weight:700; }
+    .secondary:hover { background:#ffedb8; }
+    .chat-actions { background:#fff; padding:0 11px 10px; text-align:right; }
+    .chat-actions button { font-size:.76rem; padding:7px 10px; }
+    .survey { overflow-y:auto; flex:1; padding:18px 16px; background:#fffcf3; }
+    .survey[hidden] { display:none; }
+    .survey h3 { margin:0 0 6px; font-size:1rem; }
+    .survey p { font-size:.8rem; line-height:1.45; color:#6e6554; }
+    .survey fieldset { border:0; padding:0; margin:16px 0; }
+    .survey legend { font-size:.82rem; font-weight:700; }
+    .rating-options { display:flex; gap:6px; margin-top:10px; }
+    .rating-options label { margin:0; display:flex; align-items:center; justify-content:center; gap:4px; flex:1; padding:8px 3px; border:1px solid #ddce9e; border-radius:9px; background:#fff; color:#463a18; font-size:.8rem; }
+    .rating-options label:has(input:checked) { background:#ffedaa; border-color:#b68b15; }
+    .rating-options input { width:auto; margin:0; }
+    .survey textarea { width:100%; min-height:72px; resize:vertical; border:1px solid #ddce9e; border-radius:9px; padding:10px; font:inherit; }
+    .survey .actions { margin-bottom:0; }
+    /* Paleta neutra con acento amarillo y superficies accesibles en ambos temas. */
+    :root { --surface:#fff; --canvas:#f3f1eb; --panel:#f8f6ef; --ink:#22221f; --muted:#69685f; --line:#e2ded1; --accent:#f2c438; --accent-ink:#27210b; --bubble:#fff0bd; color:var(--ink); background:var(--canvas); color-scheme:light; }
+    :root[data-theme="dark"] { --surface:#242522; --canvas:#151613; --panel:#1c1e1a; --ink:#f9f9f6; --muted:#c5c4ba; --line:#45463e; --accent:#f2c438; --accent-ink:#27210b; --bubble:#55491f; color-scheme:dark; }
+    body { background:var(--canvas); color:var(--ink); }
+    button, input, select, textarea { font:inherit; }
+    button { transition:background-color 140ms ease; }
+    .topbar { background:var(--surface); border-color:var(--line); padding-block:16px; }
+    .topbar-actions { display:flex; align-items:center; gap:16px; }
+    .brand { color:var(--ink); }
+    .brand-icon { background:var(--accent); color:var(--accent-ink); }
+    .topbar a, .eyebrow, .step { color:var(--muted); }
+    .theme-toggle { border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:999px; padding:9px 13px; font-weight:700; font-size:.8rem; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; }
+    .brand-icon svg { width:24px; height:24px; }
+    .theme-toggle svg { width:18px; height:18px; flex:none; }
+    .theme-toggle [hidden] { display:none; }
+    .theme-toggle:hover { background:var(--panel); }
+    main { max-width:1280px; padding-top:32px; }
+    .intro { align-items:center; margin-bottom:26px; }
+    .intro p:last-child, .section-heading p, .hint, .chat-header small, .survey p { color:var(--muted); }
+    .local-tag { background:var(--panel); border:1px solid var(--line); color:var(--ink); }
+    .workspace { grid-template-columns:minmax(340px, .92fr) minmax(370px, 1.08fr); gap:20px; }
+    .preview, .operator { border-color:var(--line); background:var(--surface); box-shadow:0 12px 34px #0000000a; }
+    .preview { background:var(--panel); }
+    .phone { border-color:#302f2b; background:#151512; box-shadow:0 24px 50px #00000029; }
+    .phone-notch { background:#302f2b; }
+    .phone-screen, .history, .survey { background:var(--panel); color:var(--ink); }
+    .phone-status, .chat-header, .composer, .chat-actions, #client-status { background:var(--surface); }
+    .chat-header, .composer, .operator .section-heading { border-color:var(--line); }
+    .avatar { background:var(--accent); color:var(--accent-ink); }
+    input, select, textarea, .operator .composer input { border-color:var(--line); background:var(--surface); color:var(--ink); }
+    input::placeholder, textarea::placeholder { color:var(--muted); opacity:1; }
+    .composer input { background:var(--panel); color:var(--ink); }
+    .bubble { background:var(--surface); color:var(--ink); border-color:var(--line); }
+    .bubble.customer { background:var(--bubble); color:var(--ink); border-color:var(--bubble); }
+    .bubble.operator { background:var(--panel); color:var(--ink); }
+    .who, .empty, .status, label { color:var(--muted); }
+    .status.error { color:#b3313d; }
+    :root[data-theme="dark"] .status.error { color:#ff9fa6; }
+    #operator-history { border-color:var(--line); }
+    .primary { background:var(--accent); color:var(--accent-ink); }
+    .secondary { background:var(--surface); color:var(--ink); border-color:var(--line); }
+    .secondary:hover { background:var(--panel); }
+    .rating-options label { background:var(--surface); color:var(--ink); border-color:var(--line); }
+    .rating-options label:has(input:checked) { background:var(--bubble); border-color:var(--accent); }
+    .survey textarea { background:var(--surface); color:var(--ink); border-color:var(--line); }
+    @media (max-width:800px) { .workspace { grid-template-columns:1fr; } }
+    @media (max-width:430px) { .topbar { flex-wrap:wrap; } .topbar-actions { gap:8px; } .topbar a { display:none; } .theme-toggle { font-size:.72rem; padding:8px 10px; } }
+    @media (prefers-reduced-motion:reduce) { button { transition:none; } }
+    @media (max-width:800px) { main { padding:30px 16px 48px; } .workspace { grid-template-columns:1fr; } .intro { align-items:start; } .preview { padding:20px 14px; } }
+    @media (max-width:430px) { .topbar { padding:16px; } .topbar a { font-size:.75rem; } .intro { display:block; } .local-tag { display:inline-block; margin-top:16px; } .phone-screen { min-height:440px; max-height:none; height:540px; } .operator { padding:20px; } }
+  </style>
+</head>
+<body>
+  <header class="topbar"><div class="brand"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15.5h16l-1.4-4.1a2 2 0 0 0-1.9-1.4H7.3a2 2 0 0 0-1.9 1.4L4 15.5Zm0 0v2.5m16-2.5v2.5M7 15.5v.1m10-.1v.1M8 10l1-3h6l1 3"/></svg></span><span>Chatbot de servicios</span></div><div class="topbar-actions"><button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false"><svg id="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"/></svg><svg id="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" hidden><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg><span id="theme-label">Modo oscuro</span></button><a href="/docs">Documentación de la API ↗</a></div></header>
+  <main>
+    <div class="intro"><div><p class="eyebrow">Espacio de prueba</p><h1>Una conversación, dos miradas.</h1><p>Probá el chat como cliente y gestioná la atención desde el mismo lugar.</p></div><span class="local-tag">● &nbsp;Entorno local</span></div>
+    <div class="workspace">
+      <section class="preview" aria-labelledby="client-title">
+        <div class="section-heading"><div><h2 id="client-title">Vista del cliente</h2><p>Simulá una conversación desde el celular.</p></div><span class="step">01 / CLIENTE</span></div>
+        <div class="phone"><div class="phone-screen">
+          <div class="phone-status" aria-hidden="true"><span class="phone-notch"></span></div>
+          <div class="chat-header"><div class="avatar" aria-hidden="true">✳</div><div><strong>Chat de servicios</strong><small>Conversación de prueba</small></div></div>
+          <div id="client-history" class="history" role="log" aria-live="polite"></div>
+          <form id="client-form" class="composer"><input id="client-message" aria-label="Mensaje del cliente" placeholder="Escribí un mensaje..." maxlength="4000" required><button class="primary">Enviar</button></form>
+          <form id="survey-form" class="survey" hidden>
+            <p>¡Hasta luego! Gracias por contactarnos.</p>
+            <h3>¿Cómo fue tu atención?</h3>
+            <p>Tu opinión nos ayuda a mejorar.</p>
+            <fieldset>
+              <legend>Elegí una calificación</legend>
+              <div class="rating-options">
+                <label><input type="radio" name="rating" value="1" required> 1</label>
+                <label><input type="radio" name="rating" value="2"> 2</label>
+                <label><input type="radio" name="rating" value="3"> 3</label>
+                <label><input type="radio" name="rating" value="4"> 4</label>
+                <label><input type="radio" name="rating" value="5"> 5</label>
+              </div>
+              <p>1 = Muy satisfecho · 5 = Nada satisfecho</p>
+            </fieldset>
+            <label for="survey-reason">¿Por qué? <span>(opcional)</span></label>
+            <textarea id="survey-reason" maxlength="2000" placeholder="Contanos tu experiencia"></textarea>
+            <div class="actions"><button type="submit" class="primary">Enviar y finalizar</button></div>
+          </form>
+          <div id="survey-thanks" class="survey" hidden role="status">
+            <h3>¡Muchas gracias por usar nuestro servicio!</h3>
+            <p>Valoramos tu opinión. Tu conversación finalizó.</p>
+            <button id="new-chat" type="button" class="primary">Iniciar un nuevo chat</button>
+          </div>
+          <p id="client-status" class="status" aria-live="polite"></p>
+        </div></div>
+      </section>
+      <section class="operator" aria-labelledby="operator-title">
+        <div class="section-heading"><div><h2 id="operator-title">Atención humana</h2><p>Seleccioná una conversación para atenderla.</p></div><span class="step">02 / OPERADOR</span></div>
+        <label for="operator-token">Clave de operador</label><input id="operator-token" type="password" autocomplete="off" placeholder="Ingresá la clave de operador">
+        <p class="hint">La clave se conserva solo en esta página mientras está abierta.</p>
+        <label for="conversation">Conversación</label><select id="conversation"><option value="">Seleccioná una conversación</option></select>
+        <div id="operator-history" class="history" role="log" aria-live="polite"></div>
+        <div id="survey-results" aria-live="polite"></div>
+        <form id="operator-form" class="composer"><input id="operator-message" aria-label="Respuesta del operador" placeholder="Escribí tu respuesta..." maxlength="4000" required disabled><button class="primary" id="operator-send" disabled>Responder</button></form>
+        <div class="actions"><button id="return-bot" class="secondary" disabled>Devolver al bot</button><button id="operator-close" class="secondary" type="button" disabled>Cerrar conversación</button><button id="operator-delete" class="secondary" type="button" disabled>Eliminar conversación</button><button id="refresh" class="secondary" type="button">Actualizar</button></div>
+        <p id="operator-status" class="status" aria-live="polite"></p>
+      </section>
+    </div>
+  </main>
+  <script>
+    const el = id => document.getElementById(id);
+    function setTheme(theme) {
+      const dark = theme === 'dark';
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      el('theme-label').textContent = dark ? 'Modo claro' : 'Modo oscuro';
+      el('theme-moon').hidden = dark;
+      el('theme-sun').hidden = !dark;
+      el('theme-toggle').setAttribute('aria-pressed', String(dark));
+      try { localStorage.setItem('chatbot-theme', dark ? 'dark' : 'light'); } catch {}
+    }
+    let savedTheme = 'light';
+    try { savedTheme = localStorage.getItem('chatbot-theme') || 'light'; } catch {}
+    setTheme(savedTheme);
+    el('theme-toggle').addEventListener('click', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+    let conversations = [], selected = '', busy = false, thanksVisible = false, closedSessionNeedsReset = false;
+    try { thanksVisible = sessionStorage.getItem('chatbot-thanks') === '1'; closedSessionNeedsReset = sessionStorage.getItem('chatbot-closed-session') === '1'; } catch {}
+    function showThanks(show, needsReset = false) {
+      const wasHidden = el('survey-thanks').hidden;
+      thanksVisible = show;
+      closedSessionNeedsReset = needsReset;
+      try { sessionStorage.setItem('chatbot-thanks', show ? '1' : '0'); sessionStorage.setItem('chatbot-closed-session', needsReset ? '1' : '0'); } catch {}
+      el('survey-thanks').hidden = !show;
+      el('survey-form').hidden = true;
+      el('client-history').hidden = show;
+      el('client-form').hidden = show;
+      if (show && wasHidden) el('new-chat').focus();
+    }
+    async function api(path, options = {}) {
+      const headers = {'Content-Type': 'application/json', ...options.headers};
+      if (path.startsWith('/api/conversations')) headers.Authorization = `Bearer ${el('operator-token').value}`;
+      const response = await fetch(path, {...options, headers});
+      if (!response.ok) { if (response.status === 401) throw new Error('Ingresá una clave de operador válida.'); let detail; try { detail = (await response.json()).detail; } catch {} throw new Error(typeof detail === 'string' ? detail : 'No se pudo completar la operación.'); }
+      return response.json();
+    }
+    function status(id, message, error = false) { const node = el(id); node.textContent = message; node.classList.toggle('error', error); }
+    function renderHistory(id, messages) {
+      const node = el(id); node.replaceChildren();
+      if (!messages.length) { const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = id === 'client-history' ? 'Tu conversación empieza acá.\nEscribí un mensaje para comenzar.' : 'Todavía no hay mensajes para mostrar.'; node.append(empty); return; }
+      for (const message of messages) {
+        const bubble = document.createElement('div'), who = document.createElement('div'), content = document.createElement('div');
+        bubble.className = 'bubble ' + message.role; who.className = 'who'; who.textContent = ({customer:'Cliente', bot:'Bot', operator:'Operador'})[message.role] || message.role;
+        content.textContent = message.content; bubble.append(who, content); node.append(bubble);
+      }
+      node.scrollTop = node.scrollHeight;
+    }
+    function renderSurveys(surveys) {
+      const node = el('survey-results'); node.replaceChildren();
+      if (!surveys.length) return;
+      const title = document.createElement('h3'); title.textContent = 'Opiniones del cliente'; title.style.fontSize = '.9rem'; node.append(title);
+      for (const survey of surveys) {
+        const line = document.createElement('p'); line.className = 'hint';
+        line.textContent = `Calificación: ${survey.rating}/5 (1: muy satisfecho, 5: nada satisfecho)${survey.reason ? ` · ${survey.reason}` : ''}`;
+        node.append(line);
+      }
+    }
+    function showSurvey(show) {
+      if (thanksVisible) return;
+      el('survey-form').hidden = !show;
+      el('client-history').hidden = show;
+      el('client-form').hidden = show;
+      if (show) el('survey-form').querySelector('input[name="rating"]').focus();
+      else el('client-message').focus();
+    }
+    async function refresh() {
+      if (busy) return; busy = true;
+      try {
+        if (thanksVisible) {
+          showThanks(true, closedSessionNeedsReset);
+        } else {
+          const client = await api('/api/chat/messages');
+          if (client.closed) {
+            showThanks(true, true);
+            status('client-status', 'Tu conversación finalizó.');
+          } else {
+            renderHistory('client-history', client.messages);
+            if (client.survey_pending && el('survey-form').hidden) showSurvey(true);
+            else if (!client.survey_pending && !el('survey-form').hidden) showSurvey(false);
+            status('client-status', client.survey_pending ? 'La conversación finalizó. Contanos cómo fue tu atención.' : client.state === 'HUMAN' ? 'En atención humana: el bot no responderá automáticamente.' : 'Atendido por el bot.');
+          }
+        }
+      } catch (error) { status('client-status', error.message, true); }
+      try {
+        if (!el('operator-token').value) {
+          conversations = []; selected = '';
+          el('conversation').replaceChildren(new Option('Seleccioná una conversación', ''));
+          el('operator-message').disabled = el('operator-send').disabled = el('return-bot').disabled = el('operator-close').disabled = el('operator-delete').disabled = true;
+          renderHistory('operator-history', []);
+          renderSurveys([]);
+          status('operator-status', 'Ingresá la clave para acceder a atención humana.');
+          return;
+        }
+        conversations = await api('/api/conversations');
+        const select = el('conversation'); select.replaceChildren(new Option('Seleccioná una conversación', ''));
+        for (const c of conversations) select.add(new Option(`${c.customer_id} · ${c.closed ? 'CERRADA' : c.survey_pending ? 'ENCUESTA PENDIENTE' : c.state}`, String(c.id)));
+        if (!conversations.some(c => String(c.id) === selected)) selected = '';
+        select.value = selected;
+        const current = conversations.find(c => String(c.id) === selected);
+        if (current) {
+          const [messages, surveys] = await Promise.all([api(`/api/conversations/${current.id}/messages`), api(`/api/conversations/${current.id}/surveys`)]);
+          const closed = current.closed || surveys.length > 0, pending = current.survey_pending, human = current.state === 'HUMAN' && !closed && !pending;
+          el('operator-message').disabled = el('operator-send').disabled = el('return-bot').disabled = !human;
+          el('operator-close').disabled = closed || pending;
+          el('operator-delete').disabled = !closed;
+          renderHistory('operator-history', messages); renderSurveys(surveys);
+          status('operator-status', closed ? 'Conversación finalizada.' : pending ? 'Esperando la encuesta del cliente.' : human ? 'Esperando atención humana.' : 'Esta conversación está atendida por el bot.');
+        } else {
+          el('operator-message').disabled = el('operator-send').disabled = el('return-bot').disabled = el('operator-close').disabled = el('operator-delete').disabled = true;
+          renderHistory('operator-history', []); renderSurveys([]); status('operator-status', '');
+        }
+      } catch (error) {
+        conversations = []; selected = '';
+        el('conversation').replaceChildren(new Option('Seleccioná una conversación', ''));
+        el('operator-message').disabled = el('operator-send').disabled = el('return-bot').disabled = el('operator-close').disabled = el('operator-delete').disabled = true;
+        renderHistory('operator-history', []);
+        renderSurveys([]);
+        status('operator-status', error.message, true);
+      }
+      finally { busy = false; }
+    }
+    el('client-form').addEventListener('submit', async event => {
+      event.preventDefault(); const input = el('client-message'), message = input.value.trim();
+      if (!message) { status('client-status', 'Escribí un mensaje.', true); return; }
+      try { await api('/api/chat', {method:'POST', body:JSON.stringify({customer_id:'cliente', message})}); input.value = ''; await refresh(); }
+      catch (error) { status('client-status', error.message, true); }
+    });
+    el('survey-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const form = el('survey-form'), selectedRating = form.querySelector('input[name="rating"]:checked');
+      if (!selectedRating) { status('client-status', 'Elegí una calificación.', true); return; }
+      const button = form.querySelector('button[type="submit"]'); button.disabled = true;
+      try {
+        await api('/api/chat/close', {method:'POST', body:JSON.stringify({rating:Number(selectedRating.value), reason:el('survey-reason').value.trim()})});
+        form.reset(); showThanks(true); status('client-status', 'Tu conversación finalizó.');
+      } catch (error) { status('client-status', error.message, true); }
+      finally { button.disabled = false; }
+    });
+    el('new-chat').addEventListener('click', async () => {
+      const button = el('new-chat'); button.disabled = true;
+      try {
+        if (closedSessionNeedsReset) await api('/api/chat/new-session', {method:'POST'});
+        showThanks(false); status('client-status', 'Podés iniciar una nueva conversación.');
+        await refresh(); el('client-message').focus();
+      } catch (error) { status('client-status', error.message, true); }
+      finally { button.disabled = false; }
+    });
+    el('operator-form').addEventListener('submit', async event => {
+      event.preventDefault(); const input = el('operator-message'), message = input.value.trim(); if (!selected || !message) return;
+      try { await api(`/api/conversations/${selected}/messages`, {method:'POST', body:JSON.stringify({message})}); input.value = ''; await refresh(); }
+      catch (error) { status('operator-status', error.message, true); }
+    });
+    el('return-bot').addEventListener('click', async () => {
+      if (!selected) return;
+      try { await api(`/api/conversations/${selected}/state`, {method:'PATCH', body:JSON.stringify({state:'BOT'})}); await refresh(); }
+      catch (error) { status('operator-status', error.message, true); }
+    });
+    el('operator-close').addEventListener('click', async () => {
+      if (!selected) return;
+      const button = el('operator-close'); button.disabled = true;
+      try { await api(`/api/conversations/${selected}/close`, {method:'POST'}); await refresh(); }
+      catch (error) { status('operator-status', error.message, true); }
+      finally { if (!busy) { const current = conversations.find(c => String(c.id) === selected); button.disabled = !current || current.closed || current.survey_pending; } }
+    });
+    el('operator-delete').addEventListener('click', async () => {
+      const current = conversations.find(c => String(c.id) === selected);
+      if (!current || !current.closed) return;
+      if (!window.confirm('¿Eliminar esta conversación y todos sus mensajes, solicitudes y encuesta? Esta acción no se puede deshacer.')) return;
+      const button = el('operator-delete'); button.disabled = true;
+      try { await api(`/api/conversations/${current.id}`, {method:'DELETE'}); selected = ''; await refresh(); status('operator-status', 'Conversación eliminada.'); }
+      catch (error) { status('operator-status', error.message, true); }
+      finally { if (!busy) { const item = conversations.find(c => String(c.id) === selected); button.disabled = !item || !item.closed; } }
+    });
+    el('conversation').addEventListener('change', event => { selected = event.target.value; refresh(); });
+    el('operator-token').addEventListener('change', refresh); el('refresh').addEventListener('click', refresh);
+    refresh(); setInterval(refresh, 5000);
+  </script>
+</body>
+</html>
