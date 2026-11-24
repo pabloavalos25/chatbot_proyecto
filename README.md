@@ -16,10 +16,9 @@ Python 3.10 o superior. En PowerShell:
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-Copy-Item .env.example .env
 ```
 
-En Linux/macOS: `python3 -m venv .venv`, `source .venv/bin/activate` y `cp .env.example .env`. Si fuera necesario, configurar `DATABASE_URL` en `.env`. No subir `.env` al repositorio.
+En Linux/macOS: `python3 -m venv .venv` y `source .venv/bin/activate`. Si fuera necesario, crear un archivo local `.env` para configurar `DATABASE_URL` y las demás variables. No subir `.env` al repositorio.
 
 ## Ejecución y pruebas
 
@@ -101,7 +100,6 @@ app/
   service.py       coordinación de la conversación
   main.py          endpoints y arranque
 tests/             pruebas HTTP y persistencia
-.env.example       configuración de ejemplo
 requirements.txt   dependencias
 ```
 
